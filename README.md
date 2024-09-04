@@ -112,7 +112,7 @@ The main functionality of this project is implemented in the ExplorationNode cla
 - Path Planning: Utilizes Nav2 for planning and executing paths to selected frontiers.
 - Exploration Loop: Continuously detects frontiers, clusters and filters frontiers based on surroundings, selects the best one, and navigates to it until the environment is fully explored.
 
-#### Frontier Detection
+### Frontier Detection
 The frontier detection algorithm is a crucial part of the exploration process:
 
 Detect Frontiers (detect_frontiers method):
@@ -132,7 +132,7 @@ Select Best Frontier (select_best_frontier method):
 - Calculates distances from the robot to all frontier points.
 - Sorts frontiers based on distance (TODO: Add other criteria (e.g., information gain potential))
 
-#### Integration with Nav2
+### Integration with Nav2
 Nav2 (Navigation2) is used for path planning and execution:
 
 Action Client: 
@@ -149,7 +149,7 @@ Feedback and Result Handling:
 Path Validation (is_path_free_nav2 method):
 - Uses Nav2's IsPathValid service to check if a path to a frontier is obstacle-free before attempting navigation.
 
-#### Use of Cartographer
+### Use of Cartographer
 Cartographer is used for Simultaneous Localization and Mapping (SLAM):
 
 - Integration: Cartographer is launched as a separate node via the exploration.launch.py file.
@@ -157,7 +157,7 @@ Cartographer is used for Simultaneous Localization and Mapping (SLAM):
 - Map Updates: As Cartographer updates the map, the exploration node receives these updates and uses them for frontier detection and navigation planning.
 - Localization: Cartographer provides real-time localization of the robot within the map using odometry data, which is crucial for accurate navigation and frontier selection.
 
-#### Exploration Process
+### Exploration Process
 The overall exploration process follows these steps:
 
 1. Initialize the system (Gazebo, Cartographer, Nav2, Exploration Node).
