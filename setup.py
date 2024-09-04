@@ -1,5 +1,6 @@
 from setuptools import find_packages, setup
-
+from glob import glob
+import os
 package_name = 'autonomous_tb'
 
 setup(
@@ -10,7 +11,8 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        ('share/' + package_name + '/launch', ['launch/data_collection_launch.py']),
+       (os.path.join('share', package_name, 'launch'), glob('launch/*.launch.py')),
+        (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -22,6 +24,7 @@ setup(
     entry_points={
         'console_scripts': [
             'data_collection_node = autonomous_tb.data_collection_node:main',
+            'exploration_node = autonomous_tb.exploration_node:main',
         ],
     },
 )

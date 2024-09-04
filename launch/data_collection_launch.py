@@ -6,7 +6,7 @@ from launch.actions import ExecuteProcess
 def generate_launch_description():
     return LaunchDescription([
         ExecuteProcess(
-            cmd=['ros2', 'launch', 'turtlebot3_gazebo', 'turtlebot3_world.launch.py'],
+            cmd=['ros2', 'launch', 'turtlebot3_gazebo', 'turtlebot3_house.launch.py'],
             output='screen'
         ),
         Node(

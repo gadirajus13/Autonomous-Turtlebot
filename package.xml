@@ -6,19 +6,22 @@
   <description>TODO: Package description</description>
   <maintainer email="sohan@todo.todo">sohan</maintainer>
   <license>TODO: License declaration</license>
-  <buildtool_depend>ament_cmake</buildtool_depend>
-  <buildtool_depend>ament_python</buildtool_depend>
+  <!-- <buildtool_depend>ament_python</buildtool_depend> -->
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <depend>rclpy</depend>
+  <!-- <depend>rclcpp</depend> -->
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
+  <depend>nav2_msgs</depend>
   <depend>tf2_ros</depend>
   <depend>cv_bridge</depend>
   <depend>turtlebot3_gazebo</depend>
   <depend>turtlebot3_navigation2</depend>
-  <depend>ament_index_python</depend>
+  <depend>cartographer_ros</depend>
+  <depend>navigation2</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
