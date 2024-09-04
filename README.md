@@ -84,8 +84,10 @@ You can modify the following files to adjust the behavior of the system:
 - ```exploration.launch.py```: Change the Gazebo world, robot starting position, or add/remove nodes from the launch process.
 
 ## Demo
-Here is a demonstration of the exploration node running in the default Gazebo House and World e
+Here is a demonstration of the exploration node running in the default Gazebo House and World environments
 ![Gazebo House](demo/Gazebo_house.gif)
+![Gazebo House Occupancy Grid](demo/house_map.png)
+![Gazebo World Occupancy Grid](demo/gazebo_world_map.png)
 
 ## Data Collection Node
 If you want to collect data from the lidar and camera while running your simulation. Use the following,
