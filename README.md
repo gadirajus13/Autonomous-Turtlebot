@@ -101,3 +101,72 @@ To control the turtlebot during data collection, in another terminal window run:
 ```
 ros2 run turtlebot3_teleop teleop_keyboard
 ```
+## Methodologies
+### Code Structure and Functionality
+The main functionality of this project is implemented in the ExplorationNode class within exploration_node.py. This node orchestrates the autonomous exploration process by integrating SLAM, navigation, and frontier detection.
+
+#### Key components of the ExplorationNode:
+- Initialization: Sets up ROS 2 subscribers, publishers, action clients, and service clients necessary for interfacing with other nodes (map, odometry, AMCL, Nav2).
+- Map Processing: Receives and processes occupancy grid maps from Cartographer.
+- Frontier Detection: Implements a custom frontier detection algorithm to identify unexplored areas.
+- Path Planning: Utilizes Nav2 for planning and executing paths to selected frontiers.
+- Exploration Loop: Continuously detects frontiers, clusters and filters frontiers based on surroundings, selects the best one, and navigates to it until the environment is fully explored.
+
+#### Frontier Detection
+The frontier detection algorithm is a crucial part of the exploration process:
+
+Detect Frontiers (detect_frontiers method):
+- Iterates through the occupancy grid map.
+- Identifies cells that are free (probability < occupied_threshold) and adjacent to unknown areas(-1).
+- Converts grid coordinates to world coordinates.
+
+Cluster Frontiers (cluster_frontiers method):
+- Uses DBSCAN (Density-Based Spatial Clustering of Applications with Noise) to group nearby frontier points.
+- Calculates the centroid of each cluster to represent a single frontier.
+
+Filter Obstacles (filter_obstacles method):
+- Ensures that selected frontiers are not too close to obstacles.
+- Checks a circular area around each frontier point for occupancy.
+
+Select Best Frontier (select_best_frontier method):
+- Calculates distances from the robot to all frontier points.
+- Sorts frontiers based on distance (TODO: Add other criteria (e.g., information gain potential))
+
+#### Integration with Nav2
+Nav2 (Navigation2) is used for path planning and execution:
+
+Action Client: 
+- The node creates a NavigateToPose action client to send navigation goals to Nav2.
+
+Send Goal (send_goal method):
+- Constructs a NavigateToPose.Goal message with the selected frontier's coordinates and sends the goal to Nav2 asynchronously.
+
+Feedback and Result Handling:
+- ```goal_response_callback```: Handles the initial response from Nav2 (goal accepted or rejected).
+- ```get_result_callback```: Processes the final result of the navigation action.
+- ```feedback_callback```: Receives and processes periodic feedback during navigation (e.g. navigation cancelled).
+
+Path Validation (is_path_free_nav2 method):
+- Uses Nav2's IsPathValid service to check if a path to a frontier is obstacle-free before attempting navigation.
+
+#### Use of Cartographer
+Cartographer is used for Simultaneous Localization and Mapping (SLAM):
+
+- Integration: Cartographer is launched as a separate node via the exploration.launch.py file.
+- Map Subscription: The exploration node subscribes to the occupancy grid map topic published by Cartographer (/map).
+- Map Updates: As Cartographer updates the map, the exploration node receives these updates and uses them for frontier detection and navigation planning.
+- Localization: Cartographer provides real-time localization of the robot within the map using odometry data, which is crucial for accurate navigation and frontier selection.
+
+#### Exploration Process
+The overall exploration process follows these steps:
+
+1. Initialize the system (Gazebo, Cartographer, Nav2, Exploration Node).
+2. Wait for the initial map and robot pose.
+3. Detect frontiers in the current map.
+4. Select the best frontier based on distance and other criteria.
+5. Use Nav2 to plan and execute a path to the selected frontier.
+6. During navigation, continuously update the map and re-evaluate frontiers.
+7. Once the goal is reached or becomes unreachable, select a new frontier.
+8. Repeat steps 3-7 until no more frontiers are detected or a termination condition is met.
+
+This autonomous exploration system combines the mapping capabilities of Cartographer, the navigation and planning functions of Nav2, and a custom frontier-based exploration strategy to efficiently explore and map unknown environments.
