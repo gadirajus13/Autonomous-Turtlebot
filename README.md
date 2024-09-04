@@ -74,9 +74,9 @@ ros2 run nav2_map_server map_saver_cli -f my_map
 
 ## Project Structure
 
-```exploration_node.py```: Main Python script implementing the autonomous exploration algorithm.
-```exploration.launch.py```: Launch file that sets up the entire system, including Gazebo, Cartographer, Nav2, and the exploration node.
-```config/nav2_params.yaml```: Configuration file for Nav2 parameters.
+- ```exploration_node.py```: Main Python script implementing the autonomous exploration algorithm.
+- ```exploration.launch.py```: Launch file that sets up the entire system, including Gazebo, Cartographer, Nav2, and the exploration node.
+- ```config/nav2_params.yaml```: Configuration file for Nav2 parameters.
 
 ## Configuration
 You can modify the following files to adjust the behavior of the system:
