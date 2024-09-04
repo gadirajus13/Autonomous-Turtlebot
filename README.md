@@ -62,14 +62,12 @@ This will start Gazebo with a TurtleBot3 in a house environment, launch Cartogra
 - To view the frontier markers, add a Marker Array to your RViz and select the 'frontiers' topic
 - Check the terminal output for status updates and any error messages.
 
-
 4. To stop the exploration:
 - Save the map using the typical Nav2 save methodology in the terminal
 ```bash
 ros2 run nav2_map_server map_saver_cli -f my_map
 ```
 - Press Ctrl+C in the terminal where you launched the exploration node to terminate the program once map is saved.
-
 
 
 ## Project Structure
@@ -81,9 +79,9 @@ ros2 run nav2_map_server map_saver_cli -f my_map
 ## Configuration
 You can modify the following files to adjust the behavior of the system:
 
-exploration_node.py: Adjust exploration parameters such as cluster_tolerance, min_frontier_size, obstacle_clearance, and min_goal_distance.
-config/nav2_params.yaml: Modify Nav2 parameters to fine-tune navigation behavior.
-exploration.launch.py: Change the Gazebo world, robot starting position, or add/remove nodes from the launch process.
+- ```exploration_node.py```: Adjust exploration parameters such as cluster_tolerance, min_frontier_size, obstacle_clearance, and min_goal_distance.
+- ```config/nav2_params.yaml```: Modify Nav2 parameters to fine-tune navigation behavior.
+- ```exploration.launch.py```: Change the Gazebo world, robot starting position, or add/remove nodes from the launch process.
 
 ## Data Collection Node
 If you want to collect data from the lidar and camera while running your simulation. Use the following,
