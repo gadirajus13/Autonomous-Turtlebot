@@ -83,6 +83,9 @@ You can modify the following files to adjust the behavior of the system:
 - ```config/nav2_params.yaml```: Modify Nav2 parameters to fine-tune navigation behavior.
 - ```exploration.launch.py```: Change the Gazebo world, robot starting position, or add/remove nodes from the launch process.
 
+## Demo of Exploration Node
+Here is a demonstration of the exploration node running in the default Gazebo House and World e
+
 ## Data Collection Node
 If you want to collect data from the lidar and camera while running your simulation. Use the following,
 
