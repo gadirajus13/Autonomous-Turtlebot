@@ -16,7 +16,7 @@ Key features:
 - ROS 2 Humble
 - Gazebo
 - TurtleBot3 packages for ROS 2
-- NAV2
+- Nav2
 - Cartographer
 - Python 3.8+
 - NumPy
@@ -170,3 +170,10 @@ The overall exploration process follows these steps:
 8. Repeat steps 3-7 until no more frontiers are detected or a termination condition is met.
 
 This autonomous exploration system combines the mapping capabilities of Cartographer, the navigation and planning functions of Nav2, and a custom frontier-based exploration strategy to efficiently explore and map unknown environments.
+
+## Future Work
+- Implement Visual SLAM for 3D maps
+- More robust exploration strategy factoring in information gain
+- Better global planning from frontier points
+- Custom controller using MPPI
+- Combine odometry from Cartographer and AMCL from Nav2 for better state estimation
