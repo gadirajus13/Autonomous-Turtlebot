@@ -34,20 +34,20 @@ class ExplorationNode(Node):
             callback_group=self.map_callback_group)
         self.odom_subscription = self.create_subscription(
             Odometry,
-            'odom',
+            '/odom',
             self.odom_callback,
-            10)
+            20)
         self.amcl_pose_subscription = self.create_subscription(
             PoseWithCovarianceStamped,
             'amcl_pose',
             self.amcl_pose_callback,
             10)
-        self.frontier_publisher = self.create_publisher(MarkerArray, 'frontiers', 10)
+        self.frontier_publisher = self.create_publisher(MarkerArray, 'frontiers', 30)
         self.initial_pose_publisher = self.create_publisher(
             PoseWithCovarianceStamped,
             'initialpose',
             10)
-        self.map_debug_publisher = self.create_publisher(OccupancyGrid, 'map_debug', 10)
+        # self.map_debug_publisher = self.create_publisher(OccupancyGrid, 'map_debug', 10)
         
         self.is_path_valid_client = self.create_client(
             IsPathValid, 
@@ -63,10 +63,10 @@ class ExplorationNode(Node):
         self.latest_odom = None
         self.latest_amcl_pose = None
         self.goal_handle = None
-        self.cluster_tolerance = 0.1  # meters
+        self.cluster_tolerance = 0.10  # meters
         self.min_frontier_size = 5  # minimum number of points to form a cluster
-        self.obstacle_clearance = 0.15  # meters
-        self.min_goal_distance = 0.20  # minimum distance for a new goal
+        self.obstacle_clearance = 0.2  # meters
+        self.min_goal_distance = 0.3  # minimum distance for a new goal
         self.exploration_initialized = False
         self.start_position = None
         self.navigation_in_progress = False
@@ -74,7 +74,7 @@ class ExplorationNode(Node):
         self.get_logger().info('Exploration node initialized')
 
         # Add a timer to periodically check status
-        self.create_timer(20.0, self.check_status)
+        self.create_timer(5.0, self.check_status)
         
         # Goal planning timer
         self.planning_timer = self.create_timer(
@@ -90,8 +90,7 @@ class ExplorationNode(Node):
         self.get_logger().info(f'Current status: Map: {"Received" if self.map else "Not received"}, '
                                f'Current goal: {self.current_goal if self.current_goal else "None"}, '
                                f'Initial pose sent: {self.initial_pose_sent}, '
-                               f'Latest odom received: {"Yes" if self.latest_odom else "No"}, '
-                               f'Latest AMCL pose received: {"Yes" if self.latest_amcl_pose else "No"}')
+                               f'Latest odom received: {"Yes" if self.latest_odom else "No"} ')
 
     def map_callback(self, msg):
         # self.get_logger().info(f'Received map update. Size: {msg.info.width}x{msg.info.height}')
@@ -139,7 +138,7 @@ class ExplorationNode(Node):
         goal_pos = np.array(self.current_goal)
         distance_to_goal = np.linalg.norm(robot_pos - goal_pos)
         
-        if distance_to_goal < 0.2:  # If within 0.2 meters of the goal
+        if distance_to_goal < 0.25:  # If within 0.2 meters of the goal
             self.get_logger().info('Near current goal. Planning next goal.')
             self.navigation_in_progress = False
             self.current_goal = None
@@ -151,6 +150,7 @@ class ExplorationNode(Node):
         if not await self.is_path_free_nav2(robot_pos, goal_pos):
             self.get_logger().info('Path to current goal may be obstructed. Replanning.')
             self.current_goal = None
+            self.navigation_in_progress = False
             await self.plan_next_goal()
 
     async def is_path_free_nav2(self, start, goal):
@@ -191,7 +191,7 @@ class ExplorationNode(Node):
 
     def amcl_pose_callback(self, msg):
         self.latest_amcl_pose = msg
-        self.get_logger().info(f'Received AMCL pose update. Position: ({msg.pose.pose.position.x}, {msg.pose.pose.position.y})')
+        self.get_logger().debug(f'Received AMCL pose update. Position: ({msg.pose.pose.position.x}, {msg.pose.pose.position.y})')
 
     def send_initial_pose(self):
         initial_pose = PoseWithCovarianceStamped()
@@ -227,7 +227,7 @@ class ExplorationNode(Node):
             self.initialize_exploration()
 
     async def plan_next_goal(self):
-        if self.navigation_in_progress:
+        if self.navigation_in_progress and self.current_goal is not None:
             self.get_logger().info('Navigation already in progress, skipping planning')
             return
         if self.map is None:
@@ -251,20 +251,22 @@ class ExplorationNode(Node):
         else:
             self.get_logger().info(f'Detected {len(filtered_frontiers)} filtered frontiers')
 
-        self.visualize_frontiers(filtered_frontiers)
         sorted_frontiers = self.select_best_frontier(filtered_frontiers)
+        self.visualize_frontiers(sorted_frontiers)
 
         if self.latest_odom is None:
             self.get_logger().warn('No odometry data available')
             return
 
-        robot_pos = (self.latest_odom.pose.pose.position.x, self.latest_odom.pose.pose.position.y)
+        robot_pos = np.array([self.latest_odom.pose.pose.position.x, self.latest_odom.pose.pose.position.y])
 
         for frontier in sorted_frontiers:
+            frontier_arr = np.array(frontier)
             if await self.is_path_free_nav2(robot_pos, frontier):
-                self.get_logger().info(f'Selected new goal: ({frontier[0]}, {frontier[1]})')
-                self.current_goal = frontier
-                self.send_goal(frontier[0], frontier[1])
+                if not self.navigation_in_progress or self.current_goal is None:
+                    self.get_logger().info(f'Selected new goal: ({frontier[0]}, {frontier[1]})')
+                    self.current_goal = frontier
+                    self.send_goal(frontier[0], frontier[1])
                 return
 
         self.get_logger().warn('No reachable frontiers found')
@@ -274,7 +276,8 @@ class ExplorationNode(Node):
         if not frontiers or self.latest_odom is None:
             return None
         robot_pos = np.array([self.latest_odom.pose.pose.position.x, self.latest_odom.pose.pose.position.y])
-        distances = cdist([robot_pos], frontiers)[0]
+        # distances = cdist([robot_pos], frontiers, metric='euclidean')[0]
+        distances = [np.linalg.norm(robot_pos-np.array(frontier)) for frontier in frontiers]
         frontier_distances = list(zip(frontiers, distances))
         valid_frontier_distances = [(f, d) for f, d in frontier_distances if d >= self.min_goal_distance]
         if not valid_frontier_distances:
@@ -399,8 +402,8 @@ class ExplorationNode(Node):
         self.navigate_to_pose_client.wait_for_server()
         self.get_logger().info(f'Sending goal request to ({x}, {y})...')
         self.send_goal_future = self.navigate_to_pose_client.send_goal_async(goal_msg, feedback_callback=self.feedback_callback)
-        self.send_goal_future.add_done_callback(self.goal_response_callback)
         self.navigation_in_progress = True
+        self.send_goal_future.add_done_callback(self.goal_response_callback)
 
     def goal_response_callback(self, future):
         goal_handle = future.result()
@@ -442,8 +445,13 @@ class ExplorationNode(Node):
     async def handle_no_reachable_frontiers(self):
         self.get_logger().warn('No reachable frontiers found. Returning to start position.')
         if self.start_position:
-            await self.is_path_free_nav2(self.latest_odom.pose.pose.position, self.start_position)
-            self.send_goal(self.start_position[0], self.start_position[1])
+            robot_pos = (self.latest_odom.pose.pose.position.x, self.latest_odom.pose.pose.position.y)
+            if await self.is_path_free_nav2(robot_pos, self.start_position):
+                self.get_logger().info(f'Start: ({self.start_position[0]}, {self.start_position[1]})')
+                self.send_goal(0.00, 0.00)
+            else:
+                self.get_logger().warn('No Path to Start Position. Unable to return.')
+                self.get_logger().info(f'Start: ({self.start_position[0]}, {self.start_position[1]})')
         else:
             self.get_logger().error('Start position unknown. Unable to return.')
 
